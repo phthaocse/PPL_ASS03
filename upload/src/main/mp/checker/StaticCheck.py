@@ -6,6 +6,7 @@ from AST import *
 from Visitor import *
 from Utils import Utils
 from StaticError import *
+from functools import *
 
 class MType:
     def __init__(self,partype,rettype):
@@ -41,18 +42,19 @@ class StaticChecker(BaseVisitor,Utils):
 
     def checkRedeclared(self,sym,kind,env):
         if self.lookup(sym.name,env, lambda x:x.name):
-            raise Redeclared(Variable(),ast.variable.name)
+            raise Redeclared(kind,sym.name)
         else:
-            return []
-
+            return sym
+	
     def visitProgram(self,ast, c): 
-        return [self.visit(x,x+c) for x in ast.decl]
+        return reduce(lambda x,y: [self.visit(y,x+c)]+x,ast.decl,[])
 
     def visitFuncDecl(self,ast, c): 
-        tmp = list(map(lambda x: self.visit(x,(c,True)),ast.body)) 
         kind = Procedure() if type(ast.returnType) is VoidType else Function()
-        return self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c)
-    
+        res = self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c)
+        tmp = list(map(lambda x: self.visit(x,(c,True)),ast.body)) 
+        return res
+
     def visitVarDecl(self,ast,c):
         return self.checkRedeclared(Symbol(ast.variable.name,ast.varType),Variable(),c)   
 
@@ -79,4 +81,9 @@ class StaticChecker(BaseVisitor,Utils):
     def visitStringLiteral(self,ast,c):
         return StringType()    
     
-
+    def visitId(self,ast,c):
+        res = self.lookup(ast.name,c[0],lambda x: x.name)
+        if res:
+            return res.mtype
+        else:
+            Undeclared(Identifier(),ast.name)

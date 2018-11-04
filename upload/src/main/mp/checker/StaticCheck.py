@@ -52,16 +52,16 @@ class StaticChecker(BaseVisitor,Utils):
     def visitFuncDecl(self,ast, c): 
         kind = Procedure() if type(ast.returnType) is VoidType else Function()
         res = self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c)
-        tmp = list(map(lambda x: self.visit(x,(c,True)),ast.body)) 
+        tmp = list(map(lambda x: self.visit(x,c),ast.body)) 
         return res
 
     def visitVarDecl(self,ast,c):
         return self.checkRedeclared(Symbol(ast.variable.name,ast.varType),Variable(),c)   
 
     def visitCallStmt(self, ast, c): 
-        at = [self.visit(x,(c[0],False)) for x in ast.param]
+        at = [self.visit(x,c) for x in ast.param]
         
-        res = self.lookup(ast.method.name,c[0],lambda x: x.name)#symbol
+        res = self.lookup(ast.method.name,c,lambda x: x.name)#symbol
         if res is None or not type(res.mtype) is MType or not type(res.mtype.rettype) is VoidType:
             raise Undeclared(Procedure(),ast.method.name)
         elif len(res.mtype.partype) != len(at) or True in [type(a) != type(b) for a,b in zip(at,res.mtype.partype)]:
@@ -81,9 +81,52 @@ class StaticChecker(BaseVisitor,Utils):
     def visitStringLiteral(self,ast,c):
         return StringType()    
     
+    def visitArrayCell(self,ast,c):
+        return ArrayType()
+    
+
     def visitId(self,ast,c):
-        res = self.lookup(ast.name,c[0],lambda x: x.name)
+        res = self.lookup(ast.name,c,lambda x: x.name)
         if res:
             return res.mtype
         else:
             Undeclared(Identifier(),ast.name)
+
+    def visitUnaryOp(self,ast,c):
+        expr = self.visit(ast.body,c)#return type
+        if type(expr) in [IntType,FloatType]:
+            if ast.op == '-':
+                return expr
+            else:
+                raise TypeMismatchInExpression(expr)
+        elif type(expr) in [StringType,ArrayType]:
+            raise TypeMismatchInExpression(expr)
+        else: 
+            if ast.op == 'not':
+                return expr 
+            else:
+                raise TypeMismatchInExpression(expr)
+
+    def visitBinaryOp(self,ast,c):
+        lefttype = self.visit(ast.left,c)
+        righttype = self.visit(ast.right,c)      
+        if type(lefttype) is IntType:
+            if type(righttype) is  IntType:
+                if ast.op in ['+','-','*','div','mod']:
+                    return IntType()
+                elif ast.op == '/':
+                    return FloatType()
+                elif ast.op in ['<','<=','>','>=','<>','=']:
+                    return BoolType()
+                else: 
+                    raise TypeMismatchInExpression(IntType())
+            elif type(righttype) is FloatType:
+                if ast.op in ['+','-','*','/']:
+                    return FloatType()
+                elif ast.op in ['<','<=','>','>=','<>','=']:
+                    return BoolType()
+                else:
+                    raise TypeMismatchInExpression(IntType())
+
+            
+            

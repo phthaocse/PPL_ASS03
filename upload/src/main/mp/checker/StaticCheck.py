@@ -69,6 +69,17 @@ class StaticChecker(BaseVisitor,Utils):
         else:
             return res.mtype.rettype
 
+    def visitCallExpr(self, ast, c): 
+        at = [self.visit(x,c) for x in ast.param]
+        
+        res = self.lookup(ast.method.name,c,lambda x: x.name)#symbol
+        if res is None or type(res.mtype) is MType or not type(res.mtype.rettype) is VoidType:
+            raise Undeclared(Function(),ast.method.name)
+        elif len(res.mtype.partype) != len(at) or True in [type(a) != type(b) for a,b in zip(at,res.mtype.partype)]:
+            raise TypeMismatchInStatement(ast)            
+        else:
+            return res.mtype.rettype
+
     def visitIntLiteral(self,ast, c): 
         return IntType()
 
@@ -80,9 +91,6 @@ class StaticChecker(BaseVisitor,Utils):
 
     def visitStringLiteral(self,ast,c):
         return StringType()    
-    
-    def visitArrayCell(self,ast,c):
-        return ArrayType()
     
 
     def visitId(self,ast,c):
@@ -98,14 +106,14 @@ class StaticChecker(BaseVisitor,Utils):
             if ast.op == '-':
                 return expr
             else:
-                raise TypeMismatchInExpression(expr)
+                raise TypeMismatchInExpression(ast)
         elif type(expr) in [StringType,ArrayType]:
-            raise TypeMismatchInExpression(expr)
+            raise TypeMismatchInExpression(ast)
         else: 
             if ast.op == 'not':
                 return expr 
             else:
-                raise TypeMismatchInExpression(expr)
+                raise TypeMismatchInExpression(ast)
 
     def visitBinaryOp(self,ast,c):
         lefttype = self.visit(ast.left,c)
@@ -127,6 +135,54 @@ class StaticChecker(BaseVisitor,Utils):
                     return BoolType()
                 else:
                     raise TypeMismatchInExpression(IntType())
+            else:
+                raise TypeMismatchInExpression(IntType())
+        elif type(lefttype) is FloatType:
+            if type(righttype) is  IntType:
+                if ast.op in ['+','-','*','/']:
+                    return FloatType()
+                elif ast.op in ['<','<=','>','>=','<>','=']:
+                    return BoolType() 
+                else: 
+                    raise TypeMismatchInExpression(FloatType())  
+            elif type(righttype) is FloatType:
+                if ast.op in ['+','-','*','/']:
+                    return FloatType()
+                elif ast.op in ['<','<=','>','>=','<>','=']:
+                    return BoolType() 
+                else: 
+                    raise TypeMismatchInExpression(FloatType())
+            else:
+                raise TypeMismatchInExpression(IntType())
+        elif type(lefttype) is BoolType:
+            if type(righttype) is BoolType:
+                if ast.op in ['and','and then','or','or else']:
+                    return BoolType()
+                else:
+                    raise TypeMismatchInExpression(BoolType()) 
+            else:
+                raise TypeMismatchInExpression(BoolType()) 
 
-            
-            
+    def visitIf(self, ast, c):
+        exp = self.visit(ast.expr,c)            
+        if type(exp) is not BoolType:
+            raise TypeMismatchInStatement(ast)
+        else:
+            self.visit(ast.thenStmt,c) 
+            self.visit(ast.elseStmt,c)
+
+    def visitWhile(self,ast,c):
+        exp = self.visit(ast.exp,c)            
+        if type(exp) is not BoolType:
+            raise TypeMismatchInStatement(ast)
+        else:
+            self.visit(ast.sl,c)
+
+    def visitFor(self,ast,c):
+        exp1 = self.visit(ast.expr1,c)
+        exp2 = self.visit(ast.expr2,c)
+        Id =  self.visit(ast.id,c)
+        if True in [type(x) is not IntType for x in [Id,exp1,exp2]]:
+            raise TypeMismatchInStatement(ast)
+        else:
+            self.visit(ast.loop,c)

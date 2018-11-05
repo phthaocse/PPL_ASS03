@@ -59,7 +59,7 @@ class CheckerSuite(unittest.TestCase):
                 VarDecl(Id("a"),IntType()),
                 FuncDecl(Id("main"),[],[],[
                 CallStmt(Id("putIntLn"),[UnaryOp("not",Id("a"))])])])
-        expect  = "Type Mismatch In Expression: IntType"
+        expect  = "Type Mismatch In Expression: UnaryOp(not,Id(a))"
         self.assertTrue(TestChecker.test(input,expect,406))
     
     def test_unary_expression7(self):
@@ -67,7 +67,7 @@ class CheckerSuite(unittest.TestCase):
                 VarDecl(Id("f"),FloatType()),
                 FuncDecl(Id("main"),[],[],[
                 CallStmt(Id("putIntLn"),[UnaryOp("not",Id("f"))])])])
-        expect  = "Type Mismatch In Expression: FloatType"
+        expect  = "Type Mismatch In Expression: UnaryOp(not,Id(f))"
         self.assertTrue(TestChecker.test(input,expect,407))    
                     
     def test_unary_expression8(self):
@@ -75,7 +75,7 @@ class CheckerSuite(unittest.TestCase):
                 VarDecl(Id("b"),BoolType()),
                 FuncDecl(Id("main"),[],[],[
                 CallStmt(Id("putIntLn"),[UnaryOp("-",Id("b"))])])])
-        expect  = "Type Mismatch In Expression: BoolType"
+        expect  = "Type Mismatch In Expression: UnaryOp(-,Id(b))"
         self.assertTrue(TestChecker.test(input,expect,408))   
     def test_binary_expression9(self):
         input = Program([
@@ -94,3 +94,34 @@ class CheckerSuite(unittest.TestCase):
                     CallStmt(Id("putIntLn"),[BinaryOp('<',IntLiteral(1),IntLiteral(4))])])])
         expect  = "Type Mismatch In Statement: CallStmt(Id(putIntLn),[BinaryOp(<,IntLiteral(1),IntLiteral(4))])"
         self.assertTrue(TestChecker.test(input,expect,410))  
+
+    def test_binary_expression11(self):
+        input = Program([
+                VarDecl(Id("a"),IntType()),
+                VarDecl(Id("b"),BoolType()),
+                FuncDecl(Id("main"),[],[],[
+                    CallStmt(Id("putIntLn"),[BinaryOp('+',Id("a"),Id("b"))])])])
+        expect  = "Type Mismatch In Expression: IntType"
+        self.assertTrue(TestChecker.test(input,expect,411))  
+
+
+    def test_for_typemissmatch16(self):
+        input = Program([VarDecl(Id(r'i'),IntType()),FuncDecl(Id(r'main'),[],[],[For(Id(r'i'),FloatLiteral(5),IntLiteral(1),False,[Assign(Id(r'i'),BinaryOp(r'-',Id(r'i'),IntLiteral(1)))])],VoidType())])
+        expect  = "Type Mismatch In Statement: For(Id(i)FloatLiteral(5),IntLiteral(1),False,[AssignStmt(Id(i),BinaryOp(-,Id(i),IntLiteral(1)))])"
+        self.assertTrue(TestChecker.test(input,expect,416))  
+
+    def test_if_typemissmatch17(self):
+        input = Program([FuncDecl(Id(r'main'),[],[],[If(BinaryOp("+",Id(r'a'),IntLiteral(3)),[If(BinaryOp(r'<',Id(r'a'),IntLiteral(6)),[Assign(Id(r'a'),IntLiteral(1))],[Assign(Id(r'a'),IntLiteral(3))])],[Assign(Id(r'a'),IntLiteral(6))])],VoidType())])
+        expect  = "Type Mismatch In Statement: If(BinaryOp(+,Id(a),IntLiteral(3)),[If(BinaryOp(<,Id(a),IntLiteral(6)),[AssignStmt(Id(a),IntLiteral(1))],[AssignStmt(Id(a),IntLiteral(3))])],[AssignStmt(Id(a),IntLiteral(6))])"
+        self.assertTrue(TestChecker.test(input,expect,417))  
+
+    def test_while_typemissmatch18(self):
+        input = Program([VarDecl(Id(r'i'),IntType()),FuncDecl(Id(r'main'),[],[],[While(BinaryOp(r'-',Id(r'i'),IntLiteral(0)),[Assign(Id(r'i'),BinaryOp(r'-',Id(r'i'),IntLiteral(1)))])],VoidType())])
+        expect  = "Type Mismatch In Statement: While(BinaryOp(-,Id(i),IntLiteral(0)),[AssignStmt(Id(i),BinaryOp(-,Id(i),IntLiteral(1)))])"
+        self.assertTrue(TestChecker.test(input,expect,418))  
+
+    def test_while_if_typemissmatch19(self):
+        input = Program([VarDecl(Id(r'd'),FloatType()),FuncDecl(Id(r'main'),[],[],[While(BinaryOp(r'=',Id(r'a'),BooleanLiteral(True)),[If(BinaryOp("*",Id(r'a'),IntLiteral(15)),[Break()],[])])],VoidType())])
+        expect  = "Type Mismatch In Statement: While(BinaryOp(=,Id(a),BooleanLiteral(True)),[If(BinaryOp(*,Id(a),IntLiteral(15)),[Break],[])])"
+        self.assertTrue(TestChecker.test(input,expect,419))  
+        

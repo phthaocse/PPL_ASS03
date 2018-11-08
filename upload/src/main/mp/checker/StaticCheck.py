@@ -47,18 +47,21 @@ class StaticChecker(BaseVisitor,Utils):
 	
     def visitProgram(self,ast, c): 
         res = reduce(lambda x,y: x + [self.visit(y,x+c)],ast.decl,[])
-        if self.lookup("main",res, lambda x: x.name) == None:
+        mainfind = self.lookup("main",res, lambda x: x.name) 
+        if mainfind == None:
+            raise NoEntryPoint()
+        if mainfind.mtype.partype != None or mainfind.mtype.rettype is not VoidType:
             raise NoEntryPoint()
         return res
 
 
     def visitFuncDecl(self,ast, c): 
         kind = Procedure() if type(ast.returnType) is VoidType else Function()
-        param = reduce(lambda x,y: x + [self.visit(y,x+c)],ast.param,[])
-        local = reduce(lambda x,y: x + [self.visit(y,x+c)],ast.param,param)
+        param = reduce(lambda x,y: x + [self.visit(y,x)],ast.param,[])
+        local = reduce(lambda x,y: x + [self.visit(y,x)],ast.local,param)
         c = local + c #list local + list global
         res = self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c)
-        tmp = list(map(lambda x: self.visit(x,(c,False)),ast.body)) 
+        tmp = list(map(lambda x: self.visit(x,(c,False,ast.returnType)),ast.body)) 
         return res
         
     def visitVarDecl(self,ast,c):
@@ -79,7 +82,7 @@ class StaticChecker(BaseVisitor,Utils):
         at = [self.visit(x,c) for x in ast.param]
         
         res = self.lookup(ast.method.name,c[0],lambda x: x.name)#symbol
-        if res is None or type(res.mtype) is MType or type(res.mtype.rettype) is VoidType:
+        if res is None or not type(res.mtype) is MType or type(res.mtype.rettype) is VoidType:
             raise Undeclared(Function(),ast.method.name)
         elif len(res.mtype.partype) != len(at) or True in [type(a) != type(b) for a,b in zip(at,res.mtype.partype)]:
             raise TypeMismatchInExpression(ast)            
@@ -102,7 +105,13 @@ class StaticChecker(BaseVisitor,Utils):
         return ArrayType(ast.lower,ast.upper,ast.eleType)
 
     def visitArrayCell(self,ast,c):
-        return self.visit(ast.arr,c)
+        arr = self.visit(ast.arr,c)
+        idx = self.visit(ast.idx,c)
+        if type(idx) != IntType:
+            raise TypeMismatchInExpression(ast)
+        if type(arr) != ArrayType:
+            raise TypeMismatchInExpression(ast)
+        return arr.eleType
 
     def visitId(self,ast,c):
         res = self.lookup(ast.name,c[0],lambda x: x.name)
@@ -180,20 +189,17 @@ class StaticChecker(BaseVisitor,Utils):
         lhs = self.visit(ast.lhs,c)
         exp = self.visit(ast.exp,c)    
         if type(lhs) in [StringType,ArrayType]:
-            raise TypeMismatchInExpression(ast)
+            raise TypeMismatchInStatement(ast)
         elif type(lhs) != type(exp):
             if type(lhs) is FloatType and type(exp) is IntType:
                 return FloatType()
             else:
-                raise TypeMismatchInExpression(ast) 
+                raise TypeMismatchInStatement(ast) 
         else:
             return lhs
         
     def visitReturn(self, ast, c):
-        restype = None
-        for x in c[0]:
-            if type(x.mtype) is MType:
-                restype = x.mtype.restype
+        restype = c[2]
         if type(restype) is VoidType:
             if ast.expr:
                 raise TypeMismatchInStatement(ast)
@@ -202,6 +208,8 @@ class StaticChecker(BaseVisitor,Utils):
         else:
             if ast.expr:
                 exp = self.visit(ast.expr,c)
+                print(type(exp))
+                print(type(restype))
                 if type(exp) != type(restype):
                     if type(exp) is IntType and type(restype) is FloatType:
                         return FloatType()
@@ -238,7 +246,7 @@ class StaticChecker(BaseVisitor,Utils):
             [self.visit(x,(c[0],True)) for x in ast.loop]
     
     def visitWith(self, ast, c):
-        [self.visit(x,c) for x in ast.decl]
+        reduce(lambda x,y: x + [self.visit(y,x)],ast.decl,[])
         [self.visit(x,c) for x in ast.stmt]
 
     def visitBreak(self, ast, c):

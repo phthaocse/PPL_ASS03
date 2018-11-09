@@ -11,12 +11,18 @@ class MType:
     def __init__(self,partype,rettype):
         self.partype = partype
         self.rettype = rettype
+    
+    def __str__(self):
+        return "Mtype(" + ','.join(str(i) for i in self.partype) + "," + str(self.rettype) +")"
 
 class Symbol:
     def __init__(self,name,mtype,value = None):
         self.name = name
         self.mtype = mtype
         self.value = value
+
+    def __str__(self):
+        return "Symbol(" + str(self.name) + ',' + str(self.mtype) + ')'
 
 class StaticChecker(BaseVisitor,Utils):
 
@@ -46,7 +52,15 @@ class StaticChecker(BaseVisitor,Utils):
             return sym
 	
     def visitProgram(self,ast, c): 
-        res = reduce(lambda x,y: x + [self.visit(y,x+c)],ast.decl,[])
+        tmp = [x for x in ast.decl]
+        glo = []
+        for i in tmp:
+            if type(i) is FuncDecl:
+                glo = glo + [Symbol(i.name.name,MType([x.varType for x in i.param],i.returnType))]
+            else:
+                glo = glo + [Symbol(i.variable.name,i.varType)]
+        print([str(i) for i in glo])
+        res = reduce(lambda x,y: x + [self.visit(y,(x+c,glo+c))],ast.decl,[])
         mainfind = self.lookup("main",res, lambda x: x.name) 
         if mainfind == None:
             raise NoEntryPoint()
@@ -59,12 +73,15 @@ class StaticChecker(BaseVisitor,Utils):
         kind = Procedure() if type(ast.returnType) is VoidType else Function()
         param = reduce(lambda x,y: x + [self.visit(y,x)],ast.param,[])
         local = reduce(lambda x,y: x + [self.visit(y,x)],ast.local,param)
-        c = local + c #list local + list global
-        res = self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c)
-        tmp = list(map(lambda x: self.visit(x,(c,False,ast.returnType)),ast.body)) 
+        c1 = local + c[0] #list local + list global use for check redecl 
+        res = self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c1)
+        c2 = local + c[1] #list local + list global use for check undecl
+        tmp = list(map(lambda x: self.visit(x,(c2,False,ast.returnType)),ast.body)) 
         return res
         
     def visitVarDecl(self,ast,c):
+        if type(c) is tuple:
+            c = c[0]
         return self.checkRedeclared(Symbol(ast.variable.name,ast.varType),Variable(),c)   
 
     def visitCallStmt(self, ast, c): 
@@ -208,8 +225,6 @@ class StaticChecker(BaseVisitor,Utils):
         else:
             if ast.expr:
                 exp = self.visit(ast.expr,c)
-                print(type(exp))
-                print(type(restype))
                 if type(exp) != type(restype):
                     if type(exp) is IntType and type(restype) is FloatType:
                         return FloatType()

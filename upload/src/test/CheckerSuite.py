@@ -293,10 +293,11 @@ class CheckerSuite(unittest.TestCase):
 
     def test_undeclare_procedure37(self):
         input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType()),VarDecl(Id(r'b'),IntType())],[],[If(BinaryOp(r'>',Id(r'a'),Id(r'b')),[Assign(Id(r'a'),BinaryOp(r'+',IntLiteral(1),Id(r'b')))],[Assign(Id(r'a'),BinaryOp(r'+',Id(r'b'),IntLiteral(2)))]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'foo1'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'b'),IntType()),VarDecl(Id(r'c'),IntType()),VarDecl(Id(r'd'),IntType())],[Assign(Id(r'b'),IntLiteral(2)),Assign(Id(r'c'),IntLiteral(3)),If(BinaryOp(r'>',Id(r'a'),Id(r'b')),[Assign(Id(r'd'),BinaryOp(r'+',Id(r'a'),Id(r'c')))],[Assign(Id(r'd'),BinaryOp(r'+',Id(r'b'),CallExpr(Id(r'foo2'),[IntLiteral(1)])))]),Return(Id(r'd'))],IntType()),VarDecl(Id(r'b'),IntType()),FuncDecl(Id(r'foo2'),[VarDecl(Id(r'a'),IntType())],[],[While(BinaryOp(r'>',Id(r'a'),IntLiteral(5)),[Assign(Id(r'a'),BinaryOp(r'+',Id(r'a'),IntLiteral(1)))]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[CallExpr(Id(r'foo1'),[IntLiteral(1)]),CallExpr(Id(r'foo2'),[IntLiteral(2)])])),CallStmt(Id(r'funy'),[IntLiteral(4)]),Return(None)],VoidType())])
-        expect = "Undeclared Identifier: n"
+        expect = "Undeclared Procedure: funy"
         self.assertTrue(TestChecker.test(input,expect,437))
 
     def test_assign38(self):
         input = Program([VarDecl(Id(r'a'),IntType()),VarDecl(Id(r'b'),FloatType()),VarDecl(Id(r'm'),ArrayType(1,10,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'b'),BinaryOp(r'+',ArrayCell(Id(r'm'),IntLiteral(1)),UnaryOp(r'-',IntLiteral(1)))),Assign(Id(r'b'),BinaryOp(r'*',Id(r'b'),BinaryOp(r'+',FloatLiteral(1.0),IntLiteral(1)))),Assign(Id(r'b'),UnaryOp(r'not',BinaryOp(r'=',ArrayCell(Id(r'm'),IntLiteral(1)),IntLiteral(1)))),Return(None)],VoidType())])
         expect = "Type Mismatch In Statement: AssignStmt(Id(b),UnaryOp(not,BinaryOp(=,ArrayCell(Id(m),IntLiteral(1)),IntLiteral(1))))"
         self.assertTrue(TestChecker.test(input,expect,438))
+

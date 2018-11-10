@@ -244,7 +244,11 @@ class StaticChecker(BaseVisitor,Utils):
                     else:
                         raise TypeMismatchInStatement(ast)                        
                 else:
-                    return restype
+                    if type(exp) is ArrayType:
+                        if exp.lower != restype.lower or exp.upper != restype.upper or exp.eleType != restype.eleType:
+                            raise TypeMismatchInStatement(ast) 
+                    else:
+                        return restype
             else:
                 raise TypeMismatchInStatement(ast) 
 

@@ -484,4 +484,129 @@ class CheckerSuite(unittest.TestCase):
     def test_undeclared_procedure75(self):
         input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(5),True,[For(Id(r'i'),Id(r'j'),Id(r'a'),True,[CallStmt(Id(r'Product'),[Id(r'a')])])]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
         expect = "Undeclared Procedure: Product"
-        self.assertTrue(TestChecker.test(input,expect,475)) 
+        self.assertTrue(TestChecker.test(input,expect,475))
+
+    def test_undeclared_function76(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(5),True,[For(Id(r'i'),Id(r'j'),Id(r'a'),True,[Assign(Id(r'a'),BinaryOp(r'+',IntLiteral(1),CallExpr(Id(r'Product'),[Id(r'a')])))])]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Function: Product"
+        self.assertTrue(TestChecker.test(input,expect,476)) 
+
+    def test_typemissmatch_return77(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[Return(BinaryOp(r'/',Id(r'a'),Id(r'a')))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: Return(Some(BinaryOp(/,Id(a),Id(a))))"
+        self.assertTrue(TestChecker.test(input,expect,477)) 
+
+    def test_typemissmatch_assign78(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[Return(BinaryOp(r'mod',Id(r'a'),Id(r'j')))],FloatType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: AssignStmt(Id(a),CallExpr(Id(foo),[IntLiteral(2)]))"
+        self.assertTrue(TestChecker.test(input,expect,478)) 
+
+    def test_typemissmatch_return79(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[Return(BinaryOp(r'mod',Id(r'a'),Id(r'j')))],BoolType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: Return(Some(BinaryOp(mod,Id(a),Id(j))))"
+        self.assertTrue(TestChecker.test(input,expect,479)) 
+
+    def test_typemissmatch_return80(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r's'),StringType())],[Return(Id(r's'))],FloatType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: Return(Some(Id(s)))"
+        self.assertTrue(TestChecker.test(input,expect,480)) 
+
+    def test_typemissmatch_return81(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Return(ArrayCell(Id(r'arr'),IntLiteral(0)))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: Return(Some(ArrayCell(Id(arr),IntLiteral(0))))"
+        self.assertTrue(TestChecker.test(input,expect,481)) 
+
+    def test_typemissmatch_return82(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,5,IntType()))],[Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: Return(Some(Id(arr)))"
+        self.assertTrue(TestChecker.test(input,expect,482)) 
+
+    def test_typemissmatch_return83(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,5,IntType()))],[Return(BinaryOp(r'+',Id(r'arr'),Id(r'arr')))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Expression: BinaryOp(+,Id(arr),Id(arr))"
+        self.assertTrue(TestChecker.test(input,expect,483)) 
+
+    def test_typemissmatch_exp_array84(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',Id(r'arr'),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Expression: BinaryOp(+,Id(arr),Id(a))"
+        self.assertTrue(TestChecker.test(input,expect,484)) 
+
+    def test_typemissmatch_stmt_array85(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(Id(r'arr'),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: AssignStmt(Id(arr),BinaryOp(+,ArrayCell(Id(arr),Id(i)),Id(a)))"
+        self.assertTrue(TestChecker.test(input,expect,485)) 
+
+    def test_typemissmatch_exp_array86(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'f')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Expression: ArrayCell(Id(arr),Id(f))"
+        self.assertTrue(TestChecker.test(input,expect,486)) 
+
+    def test_typemissmatch_exp_array87(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r's')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Expression: ArrayCell(Id(arr),Id(s))"
+        self.assertTrue(TestChecker.test(input,expect,487)) 
+
+    def test_typemissmatch_callexp88(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2),IntLiteral(1)])),Return(None)],VoidType())])
+        expect = "Type Mismatch In Expression: CallExpr(Id(foo),[IntLiteral(2),IntLiteral(1)])"
+        self.assertTrue(TestChecker.test(input,expect,488)) 
+
+    def test_typemissmatch_callstmt89(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'foo1'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')])],VoidType()),FuncDecl(Id(r'main'),[],[],[CallStmt(Id(r'foo1'),[IntLiteral(2),IntLiteral(1)]),Return(None)],VoidType())])
+        expect = "Type Mismatch In Statement: CallStmt(Id(foo1),[IntLiteral(2),IntLiteral(1)])"
+        self.assertTrue(TestChecker.test(input,expect,489)) 
+
+    def test_undeclared_procedure90(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[CallStmt(Id(r'foo1'),[IntLiteral(2)]),CallStmt(Id(r'foo2'),[IntLiteral(8)]),Return(None)],VoidType()),FuncDecl(Id(r'foo1'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')])],VoidType())])
+        expect = "Undeclared Procedure: foo2"
+        self.assertTrue(TestChecker.test(input,expect,490)) 
+
+    def test_undeclared_function91(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[CallStmt(Id(r'foo1'),[IntLiteral(2)]),Assign(Id(r'a'),CallExpr(Id(r'foo2'),[IntLiteral(8)])),Return(None)],VoidType()),FuncDecl(Id(r'foo1'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')])],VoidType())])
+        expect = "Undeclared Function: foo2"
+        self.assertTrue(TestChecker.test(input,expect,491)) 
+
+    def test_undeclared_var92(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[CallStmt(Id(r'foo1'),[IntLiteral(2)]),Assign(Id(r'b'),CallExpr(Id(r'foo2'),[IntLiteral(8)])),Return(None)],VoidType()),FuncDecl(Id(r'foo1'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')])],VoidType())])
+        expect = "Undeclared Identifier: b"
+        self.assertTrue(TestChecker.test(input,expect,492)) 
+
+    def test_typemissmatch_exp93(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'a'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[CallStmt(Id(r'foo1'),[IntLiteral(2)]),Assign(Id(r'b'),CallExpr(Id(r'foo2'),[IntLiteral(8)])),Return(None)],VoidType()),FuncDecl(Id(r'foo1'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')])],VoidType())])
+        expect = "Type Mismatch In Expression: ArrayCell(Id(a),Id(i))"
+        self.assertTrue(TestChecker.test(input,expect,493)) 
+
+    def test_redeclared_procedure94(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Return(None)],VoidType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')])],VoidType())])
+        expect = "Redeclared Procedure: foo"
+        self.assertTrue(TestChecker.test(input,expect,494))     
+
+    def test_redeclared_function95(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Return(None)],VoidType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')])],IntType())])
+        expect = "Redeclared Function: foo"
+        self.assertTrue(TestChecker.test(input,expect,495))  
+
+    def test_redeclared_function96(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Return(None)],VoidType()),FuncDecl(Id(r'foo2'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')]),With([VarDecl(Id(r'a'),ArrayType(1,5,IntType())),VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[])],IntType())])
+        expect = "Redeclared Variable: a"
+        self.assertTrue(TestChecker.test(input,expect,496))
+
+    def test_random97(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),VarDecl(Id(r'f'),FloatType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'f'),UnaryOp(r'-',Id(r'a'))),Return(None)],VoidType()),FuncDecl(Id(r'foo2'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')]),With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[])],IntType())])
+        expect = "Function foo2Not Return "
+        self.assertTrue(TestChecker.test(input,expect,497))
+
+    def test_random98(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),VarDecl(Id(r'f'),FloatType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),UnaryOp(r'-',Id(r'f'))),Return(None)],VoidType()),FuncDecl(Id(r'foo2'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')]),With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[]),Return(Id(r'a'))],IntType())])
+        expect = "Type Mismatch In Statement: AssignStmt(Id(a),UnaryOp(-,Id(f)))"
+        self.assertTrue(TestChecker.test(input,expect,498))
+
+    def test_random99(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),VarDecl(Id(r'f'),FloatType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),UnaryOp(r'not',Id(r'f'))),Return(None)],VoidType()),FuncDecl(Id(r'foo2'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')]),With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[]),Return(Id(r'a'))],IntType())])
+        expect = "Type Mismatch In Expression: UnaryOp(not,Id(f))"
+        self.assertTrue(TestChecker.test(input,expect,499))
+
+    def test_random100(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),VarDecl(Id(r'f'),FloatType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType()),VarDecl(Id(r'f'),FloatType()),VarDecl(Id(r's'),StringType()),VarDecl(Id(r'arr'),ArrayType(1,3,IntType()))],[Assign(ArrayCell(Id(r'arr'),Id(r'i')),BinaryOp(r'+',ArrayCell(Id(r'arr'),Id(r'i')),Id(r'a'))),Return(Id(r'arr'))],ArrayType(1,3,IntType())),FuncDecl(Id(r'maiin'),[],[],[Assign(Id(r'a'),IntLiteral(1)),Return(None)],VoidType()),FuncDecl(Id(r'foo2'),[VarDecl(Id(r'i'),IntType())],[VarDecl(Id(r'a'),IntType())],[Assign(Id(r'a'),Id(r'i')),CallStmt(Id(r'putIntLn'),[Id(r'a')]),With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[]),Return(Id(r'a'))],IntType())])
+        expect = "No entry point"
+        self.assertTrue(TestChecker.test(input,expect,500))

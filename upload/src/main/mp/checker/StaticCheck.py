@@ -45,9 +45,9 @@ class StaticChecker(BaseVisitor,Utils):
     def check(self):
         return self.visit(self.ast,StaticChecker.global_envi)
 
-    def checkRedeclared(self,sym,kind,env):
-        if self.lookup(sym.name,env, lambda x:x.name):
-            raise Redeclared(kind,sym.name)
+    def checkRedeclared(self,sym,kind,env,astname):
+        if self.lookup(sym.name.lower(),env, lambda x:x.name):
+            raise Redeclared(kind,astname)
         else:
             return sym
 	
@@ -64,7 +64,7 @@ class StaticChecker(BaseVisitor,Utils):
         mainfind = self.lookup("main",res, lambda x: x.name) 
         if mainfind == None:
             raise NoEntryPoint()
-        if mainfind.mtype.partype != None or mainfind.mtype.rettype is not VoidType:
+        if mainfind.mtype.partype != [] or type(mainfind.mtype.rettype) != VoidType:
             raise NoEntryPoint()
         return res
 
@@ -74,7 +74,7 @@ class StaticChecker(BaseVisitor,Utils):
         param = reduce(lambda x,y: x + [self.visit(y,x)],ast.param,[])
         local = reduce(lambda x,y: x + [self.visit(y,x)],ast.local,param)
         c1 = local + c[0] #list local + list global use for check redecl 
-        res = self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c1)
+        res = self.checkRedeclared(Symbol(ast.name.name,MType([x.varType for x in ast.param],ast.returnType)),kind,c1,ast.name.name)
         c2 = local + c[1] #list local + list global use for check undecl
         tmp = list(map(lambda x: self.visit(x,(c2,False,ast.returnType)),ast.body)) 
         check = False
@@ -95,7 +95,7 @@ class StaticChecker(BaseVisitor,Utils):
     def visitVarDecl(self,ast,c):
         if type(c) is tuple:
             c = c[0]
-        return self.checkRedeclared(Symbol(ast.variable.name,ast.varType),Variable(),c)   
+        return self.checkRedeclared(Symbol(ast.variable.name,ast.varType),Variable(),c,ast.variable.name)   
 
     def visitCallStmt(self, ast, c): 
         at = [self.visit(x,c) for x in ast.param]
@@ -282,6 +282,7 @@ class StaticChecker(BaseVisitor,Utils):
             raise TypeMismatchInStatement(ast)
         else:
             [self.visit(x,(c[0],True,c[2])) for x in ast.loop]
+            return False
     
     def visitWith(self, ast, c):
         reduce(lambda x,y: x + [self.visit(y,x)],ast.decl,[])

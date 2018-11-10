@@ -400,3 +400,88 @@ class CheckerSuite(unittest.TestCase):
         input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(10),True,[Assign(Id(r'j'),IntLiteral(2)),Assign(Id(r'a'),Id(r'j'))])],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
         expect = "Function fooNot Return "
         self.assertTrue(TestChecker.test(input,expect,458))
+
+    def test_function_not_return59(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[If(BinaryOp(r'>',Id(r'i'),IntLiteral(4)),[Return(Id(r'i'))],[If(BinaryOp(r'>',Id(r'j'),IntLiteral(4)),[Return(Id(r'j'))],[])])],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Function fooNot Return "
+        self.assertTrue(TestChecker.test(input,expect,459))
+
+    def test_function_not_return60(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[If(BinaryOp(r'>',Id(r'i'),IntLiteral(4)),[Return(Id(r'i'))],[If(BinaryOp(r'>',Id(r'j'),IntLiteral(4)),[Return(Id(r'j'))],[While(BinaryOp(r'=',Id(r'i'),Id(r'j')),[Return(Id(r'a'))])])])],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Function fooNot Return "
+        self.assertTrue(TestChecker.test(input,expect,460))
+
+    def test_function_not_return61(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[If(BinaryOp(r'>',Id(r'i'),IntLiteral(4)),[Return(Id(r'i'))],[If(BinaryOp(r'>',Id(r'j'),IntLiteral(4)),[Return(Id(r'j'))],[For(Id(r'i'),IntLiteral(1),Id(r'j'),True,[Return(Id(r'a'))])])])],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Function fooNot Return "
+        self.assertTrue(TestChecker.test(input,expect,461))   
+
+    def test_function_not_return62(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[If(BinaryOp(r'>',Id(r'i'),IntLiteral(4)),[Return(Id(r'i'))],[If(BinaryOp(r'>',Id(r'j'),IntLiteral(4)),[Return(Id(r'j'))],[])]),With([VarDecl(Id(r'b'),IntType()),VarDecl(Id(r'c'),ArrayType(1,3,IntType()))],[Return(Id(r'a'))])],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Function fooNot Return "
+        self.assertTrue(TestChecker.test(input,expect,462))    
+
+    def test_Break_notLoop63(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(5),True,[For(Id(r'j'),IntLiteral(1),Id(r'i'),True,[If(BinaryOp(r'=',Id(r'i'),Id(r'j')),[Break()],[])])]),Break(),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Break Not In Loop"
+        self.assertTrue(TestChecker.test(input,expect,463))
+
+    def test_Continue_notLoop64(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(5),True,[For(Id(r'j'),IntLiteral(1),Id(r'i'),True,[If(BinaryOp(r'=',Id(r'i'),Id(r'j')),[Continue()],[])])]),Continue(),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Continue Not In Loop"
+        self.assertTrue(TestChecker.test(input,expect,464))   
+
+    def test_Break_notLoop65(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[Break()]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Break Not In Loop"
+        self.assertTrue(TestChecker.test(input,expect,465))
+
+    def test_Continue_notLoop66(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[Continue()]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Continue Not In Loop"
+        self.assertTrue(TestChecker.test(input,expect,466)) 
+
+    def test_redeclared_variable67(self):
+        input = Program([FuncDecl(Id(r'main'),[],[],[],VoidType()),VarDecl(Id(r'main'),IntType())])
+        expect = "Redeclared Variable: main"
+        self.assertTrue(TestChecker.test(input,expect,467)) 
+
+    def test_redeclared_variable68(self):
+        input = Program([FuncDecl(Id(r'main'),[],[],[],VoidType()),VarDecl(Id(r'MAIN'),IntType())])
+        expect = "Redeclared Variable: MAIN"
+        self.assertTrue(TestChecker.test(input,expect,468)) 
+
+    def test_undeclared_procedure69(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[CallStmt(Id(r'foo1'),[Id(r'a')])]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Procedure: foo1"
+        self.assertTrue(TestChecker.test(input,expect,469)) 
+
+    def test_undeclared_function70(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[With([VarDecl(Id(r'a'),ArrayType(1,5,IntType()))],[Assign(Id(r'a'),CallExpr(Id(r'foo1'),[Id(r'a')]))]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Function: foo1"
+        self.assertTrue(TestChecker.test(input,expect,470)) 
+
+    def test_undeclared_procedure71(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[If(BinaryOp(r'=',Id(r'i'),Id(r'j')),[CallStmt(Id(r'Add'),[Id(r'a')])],[]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Procedure: Add"
+        self.assertTrue(TestChecker.test(input,expect,471)) 
+
+    def test_undeclared_function72(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[If(BinaryOp(r'=',Id(r'i'),Id(r'j')),[Assign(Id(r'a'),BinaryOp(r'+',Id(r'a'),CallExpr(Id(r'Add'),[Id(r'a')])))],[]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Function: Add"
+        self.assertTrue(TestChecker.test(input,expect,472)) 
+
+    def test_undeclared_function73(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(5),True,[Assign(Id(r'a'),BinaryOp(r'+',Id(r'a'),CallExpr(Id(r'Add'),[Id(r'a')])))]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Function: Add"
+        self.assertTrue(TestChecker.test(input,expect,473)) 
+
+    def test_undeclared_procedure74(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(5),True,[CallStmt(Id(r'Procduct'),[Id(r'a')])]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Procedure: Procduct"
+        self.assertTrue(TestChecker.test(input,expect,474)) 
+
+    def test_undeclared_procedure75(self):
+        input = Program([VarDecl(Id(r'a'),IntType()),FuncDecl(Id(r'foo'),[VarDecl(Id(r'a'),IntType())],[VarDecl(Id(r'i'),IntType()),VarDecl(Id(r'j'),IntType())],[For(Id(r'i'),IntLiteral(1),IntLiteral(5),True,[For(Id(r'i'),Id(r'j'),Id(r'a'),True,[CallStmt(Id(r'Product'),[Id(r'a')])])]),Return(Id(r'a'))],IntType()),FuncDecl(Id(r'main'),[],[],[Assign(Id(r'a'),CallExpr(Id(r'foo'),[IntLiteral(2)])),Return(None)],VoidType())])
+        expect = "Undeclared Procedure: Product"
+        self.assertTrue(TestChecker.test(input,expect,475)) 
